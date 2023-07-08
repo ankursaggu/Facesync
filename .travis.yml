@@ -1,0 +1,34 @@
+os:
+  - linux
+
+language: python
+
+sudo: true
+
+python:
+  - "2.7"
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ffmpeg; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install libav; fi
+  - sudo apt-get install libav-tools
+
+install:
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  - conda create -q -n testenv python=$TRAVIS_PYTHON_VERSION pip numpy scipy pytest
+  - source activate testenv
+  - pip install python-coveralls
+  - pip install -r requirements.txt
+  - python setup.py install
+
+script: coverage run --source facesync -m py.test
+
+after_success:
+  - coveralls
